@@ -62,5 +62,45 @@ def get_all_movies_from_ratings(my_cache, df: DataFrame):
     return results
 
 
+def get_popular_movies_page(page: int):
 
+    url = "https://api.themoviedb.org/3/movie/popular"
+
+    params = {"page": page}
+
+    response = requests.get(url, headers=headers, params=params)
+
+
+    return response.json()
+
+def get_popular_movies():
+
+    results = []
+
+    for page in tqdm(range(1, 501), desc="Processing movies"):
+        result = get_popular_movies_page(page)
+
+        movies = result.get("results", [])
+
+        for m in movies:
+
+            results.append({
+                "title": m["title"],
+                "year": m["release_date"][:4] if m.get("release_date") else None,
+                "tmdb_id": m["id"],
+                "genre_ids": m["genre_ids"],
+                "vote_average": m["vote_average"],
+                "vote_count": m["vote_count"],
+                "popularity": m["popularity"],
+                "release_date": m["release_date"],
+                "original_language": m["original_language"],
+            })
+
+    return results
+
+
+
+        
+
+    
 
