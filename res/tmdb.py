@@ -1,6 +1,9 @@
 import requests
 from dotenv import load_dotenv
+from pandas import DataFrame
 import os
+from tqdm import tqdm
+from res import cache
 
 load_dotenv()
 
@@ -23,4 +26,41 @@ def get_movie_by_title_and_year(title: str, year: int):
     response = requests.get(url, headers=headers, params=params)
 
     return response.json()
+
+
+def get_all_movies_from_ratings(my_cache, df: DataFrame):
+
+    results = []
+
+    for row in tqdm(df.itertuples(index=False), total=len(df), desc="Processing movies"):
+        title = row.Name
+        year = row.Year
+        my_rating = row.Rating
+        date_rated = row.Date
+
+        result = cache.get_cached_movie(my_cache, title, year)
+
+        if not result.get("results"):
+            continue
+
+        m = result["results"][0]
+
+        results.append({
+            "title": title,
+            "year": year,
+            "my_rating": my_rating,
+            "date_rated": date_rated,
+            "tmdb_id": m["id"],
+            "genre_ids": m["genre_ids"],
+            "vote_average": m["vote_average"],
+            "vote_count": m["vote_count"],
+            "popularity": m["popularity"],
+            "release_date": m["release_date"],
+            "original_language": m["original_language"],
+        })
+
+    return results
+
+
+
 

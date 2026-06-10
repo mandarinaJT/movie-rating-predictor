@@ -1,13 +1,14 @@
 import pandas as pd
-from res import tmdb
+from res import tmdb, cache
 
 df = pd.read_csv("data/ratings.csv")
 
-print(df.shape)
-print(df.head(10))
-print(df["Rating"].describe())
+my_cache = cache.open_cache()
 
-# title = str(input("Unesi ime filma: "))
-# year = int(input("Unesi godinu snimanja: "))
+results = tmdb.get_all_movies_from_ratings(my_cache, df)
 
-# print(tmdb.get_movie_by_title_and_year(title, year))
+results_df = pd.DataFrame(results)
+
+results_df.to_csv("data/movies_enriched.csv", index=False)
+
+cache.save_cache(my_cache)
