@@ -12,7 +12,7 @@ def open_cache():
         with open(CACHE_FILE, "r") as f:
             cache = json.load(f)
     else:
-        cache = {}
+        cache = {"movies": {}, "credits": {}}
 
     return cache
 
@@ -24,11 +24,22 @@ def save_cache(cache):
 def get_cached_movie(cache, title, year):
     key = f"{title}::{year}"
 
-    if key in cache:
-        return cache[key]
+    if key in cache["movies"]:
+        return cache["movies"][key]
     
 
     result = tmdb.get_movie_by_title_and_year(title, year)
-    cache[key] = result
+    cache["movies"][key] = result
+
+    return result
+
+def get_cached_credits(cache, tmdb_id):
+    key = str(tmdb_id)
+
+    if key in cache["credits"]:
+        return cache["credits"][key]
+
+    result = tmdb.get_credits(tmdb_id)
+    cache["credits"][key] = result
 
     return result

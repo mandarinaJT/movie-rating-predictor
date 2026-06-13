@@ -4,6 +4,7 @@ from pandas import DataFrame
 import os
 from tqdm import tqdm
 from res import cache
+import time
 
 load_dotenv()
 
@@ -97,6 +98,56 @@ def get_popular_movies():
             })
 
     return results
+
+
+def get_genres():
+    response = requests.get(
+        "https://api.themoviedb.org/3/genre/movie/list",
+        headers=headers,
+    )
+
+    print(response.json())
+
+
+def get_credits(tmdb_id):
+    url = f"https://api.themoviedb.org/3/movie/{tmdb_id}/credits"
+    try:
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        return response.json()
+    except Exception as e:
+        print(f"Failed for {tmdb_id}: {e}")
+        return {"cast": [], "crew": []}
+    
+
+
+def extract_directors(credits):
+    return [
+        person["name"]
+        for person in credits.get("crew", [])
+        if person.get("job") == "Director"
+    ]
+
+def extract_actors(credits, top_n=5):
+    cast = credits.get("cast", [])
+
+    return [actor["name"] for actor in cast[:top_n]]
+
+def add_cast_and_crew(my_cache, df):
+    directors = []
+    actors = []
+
+    # for row in tqdm(df.itertuples(index=False), total=len(df), desc="Processing movies"):
+    for tmdb_id in tqdm(df["tmdb_id"], total=len(df), desc="Processing credits"):
+        credits = cache.get_cached_credits(my_cache, tmdb_id)
+
+        directors.append(extract_directors(credits))
+        actors.append(extract_actors(credits, top_n=5))
+    
+    df["directors"] = directors
+    df["actors"] = actors
+
+    return df
 
 
 

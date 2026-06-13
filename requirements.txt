@@ -2,3 +2,4 @@ pandas
 requests
 dotenv
 tqdm
+scikit-learn
